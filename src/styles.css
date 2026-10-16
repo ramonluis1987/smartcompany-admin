@@ -1,0 +1,73 @@
+@import "tailwindcss";
+
+/* Same design language as the public site (Newsreader + Albert Sans, single deep green). */
+@theme {
+  --color-paper: #fbfbf9;
+  --color-stone: #f1efea;
+  --color-stone-2: #e7e4dd;
+  --color-ink: #16181a;
+  --color-text: #3b3f44;
+  --color-muted: #6f747b;
+  --color-line: #ddd9d0;
+  --color-brand: #163b2e;
+  --color-brand-2: #1f5240;
+  --color-brand-soft: #e6eee9;
+  --color-danger: #9b2226;
+  --color-danger-soft: #f6e3e3;
+  --color-warn-soft: #f6eccb;
+
+  --font-serif: "Newsreader", Georgia, serif;
+  --font-sans: "Albert Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+@layer base {
+  html,
+  body {
+    min-height: 100%;
+  }
+  body {
+    @apply bg-paper font-sans text-[14.5px] text-text antialiased;
+    margin: 0;
+  }
+  h1, h2, h3 {
+    @apply font-serif font-normal text-ink;
+    letter-spacing: -0.015em;
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-brand);
+    outline-offset: 2px;
+  }
+}
+
+@utility label {
+  @apply text-[11px] font-medium uppercase tracking-[0.18em] text-muted;
+}
+@utility input {
+  @apply min-h-10 w-full rounded-[3px] border border-line bg-white px-3 py-2 text-[14.5px] text-ink outline-none transition-colors placeholder:text-muted/70 focus:border-brand disabled:bg-stone;
+}
+
+/* Rich text editor surface, mirrors .prose-legal on the site */
+.editor-content .ProseMirror {
+  @apply min-h-[420px] px-6 py-5 text-[16px] leading-[1.7] text-text outline-none;
+}
+.editor-content .ProseMirror > * + * { margin-top: 0.9em; }
+.editor-content .ProseMirror h2 { @apply font-serif text-[1.6rem] text-ink; }
+.editor-content .ProseMirror h3 { @apply font-serif text-[1.3rem] text-ink; }
+.editor-content .ProseMirror h4 { @apply font-serif text-[1.1rem] text-ink; }
+.editor-content .ProseMirror strong { @apply font-semibold text-ink; }
+.editor-content .ProseMirror a { @apply text-brand underline; }
+.editor-content .ProseMirror ul { list-style: disc; padding-left: 1.4em; }
+.editor-content .ProseMirror ol { list-style: decimal; padding-left: 1.4em; }
+.editor-content .ProseMirror blockquote { @apply border-l-2 border-brand bg-brand-soft/60 py-2 pl-4 font-serif text-ink; }
+.editor-content .ProseMirror img { @apply h-auto max-w-full rounded; }
+.editor-content .ProseMirror img.ProseMirror-selectednode { outline: 2px solid var(--color-brand); }
+.editor-content .ProseMirror hr { @apply my-6 border-line; }
+.editor-content .ProseMirror table { @apply w-full border-collapse text-[14px]; }
+.editor-content .ProseMirror th,
+.editor-content .ProseMirror td { @apply border border-line px-2.5 py-1.5 align-top; }
+.editor-content .ProseMirror th { @apply bg-stone font-semibold; }
+.editor-content .ProseMirror .selectedCell { @apply bg-brand-soft; }
+.editor-content .ProseMirror p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  @apply pointer-events-none float-left h-0 text-muted/70;
+}
