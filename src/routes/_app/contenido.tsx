@@ -2,9 +2,11 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
 import { z } from 'zod'
+import { RichTextEditor } from '#/components/RichTextEditor'
 import { ImageInput } from '#/components/ImageInput'
 import {
   Button,
+  Field,
   Card,
   ErrorBox,
   Loading,
@@ -27,9 +29,10 @@ type Spec = {
   max?: number
 }
 type Section = { title: string; fields: Spec[] }
+const COPY_LIMITS: Record<string, number> = { heroEyebrow: 120, heroCaptionLeft: 120, heroCaptionRight: 120, statementAuthor: 160 }
 
 const EMPHASIS =
-  'Encierre entre *asteriscos* las palabras que se muestran en cursiva de color bronce.'
+  'Seleccione las palabras para cambiar su fuente, tamaño, color o énfasis.'
 
 const FORMS: Record<
   Key,
@@ -351,6 +354,12 @@ function SettingsForm({
                   onChange={(v) => set(f.name, v ?? '')}
                   aspect="aspect-[16/10]"
                 />
+              ) : (settingsKey === 'home' || (settingsKey === 'site' && f.name === 'footerText') || (settingsKey === 'consultas' && ['title', 'intro', 'articleCtaTitle', 'articleCtaText', 'protectedText'].includes(f.name))) ? (
+                <div key={f.name} className={f.kind === 'textarea' ? 'md:col-span-2' : ''}>
+                  <Field label={f.label} hint={f.hint}>
+                    {() => <RichTextEditor inline label={f.label} value={String(values[f.name] ?? '')} onChange={(v) => set(f.name, v)} maxLength={f.max ?? (COPY_LIMITS[f.name] ?? (f.name.endsWith('Eyebrow') ? 80 : 200))} />}
+                  </Field>
+                </div>
               ) : f.kind === 'textarea' ? (
                 <TextArea
                   key={f.name}

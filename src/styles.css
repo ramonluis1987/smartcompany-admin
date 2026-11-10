@@ -71,3 +71,28 @@
   content: attr(data-placeholder);
   @apply pointer-events-none float-left h-0 text-muted/70;
 }
+
+.editor-inline .ProseMirror { min-height: 84px; padding: 12px; overflow-wrap: anywhere; }
+.editor-content .ProseMirror strong { color: inherit; }
+.text-format-bubble {
+  z-index: 100; width: min(480px, calc(100vw - 24px));
+  max-height: min(360px, 70dvh); overflow-y: auto; padding: 10px;
+  border: 1px solid var(--color-line); border-radius: 6px;
+  background: white; box-shadow: 0 8px 32px #142b4524;
+}
+.text-format-controls { color: var(--color-ink); font-family: var(--font-sans); font-size: 12px; }
+.format-row { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; }
+.format-row + .format-row { margin-top: 6px; }
+.format-choice, .format-action, .format-color {
+  min-height: 34px; border: 1px solid var(--color-line); border-radius: 3px;
+  padding: 4px 7px; background: white; max-width: 100%;
+}
+.format-action { min-width: 34px; cursor: pointer; }
+.format-action:hover { background: var(--color-stone); }
+.format-action[aria-pressed="true"] { background: var(--color-brand); color: white; border-color: var(--color-brand); }
+.format-action:disabled { opacity: .4; cursor: default; }
+.format-color { display: inline-flex; align-items: center; gap: 5px; }
+.format-color input { width: 24px; height: 24px; padding: 0; cursor: pointer; }
+@media (pointer: coarse) {
+  .format-choice, .format-action, .format-color { min-height: 44px; }
+}

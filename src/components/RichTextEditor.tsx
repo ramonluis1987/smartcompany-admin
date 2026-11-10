@@ -1,10 +1,15 @@
 import { EditorContent, useEditor, useEditorState } from '@tiptap/react'
+import { Node } from '@tiptap/core'
+import { BubbleMenu } from '@tiptap/react/menus'
+import { TextStyleKit } from '@tiptap/extension-text-style'
+import TextAlign from '@tiptap/extension-text-align'
 import type { Editor } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Image from '@tiptap/extension-image'
 import { TableKit } from '@tiptap/extension-table'
-import { Placeholder } from '@tiptap/extensions'
-import { useRef, useState } from 'react'
+import { CharacterCount, Placeholder } from '@tiptap/extensions'
+import { useEffect, useRef, useState } from 'react'
+import { TextFormatControls } from './TextFormatControls'
 import { mediaUrl, uploadImage } from '#/lib/api'
 import { errorText, useUI } from './ui'
 
@@ -12,15 +17,22 @@ import { errorText, useUI } from './ui'
  * Article/area body editor. Produces the same HTML subset the API sanitizer keeps.
  * Images are stored with site-relative /uploads/... paths and shown through the API here.
  */
-export function RichTextEditor({ value, onChange, placeholder }: { value: string; onChange: (html: string) => void; placeholder?: string }) {
+export function RichTextEditor({ value, onChange, placeholder, inline = false, label = 'Contenido', maxLength }: { value: string; onChange: (html: string) => void; placeholder?: string; inline?: boolean; label?: string; maxLength?: number }) {
   const [source, setSource] = useState(false)
+  const [format, setFormat] = useState(false)
+  const lastEmitted = useRef(value)
   const editor = useEditor({
     immediatelyRender: false,
     extensions: [
       StarterKit.configure({
-        heading: { levels: [2, 3, 4] },
+        heading: inline ? false : { levels: [2, 3, 4] },
+        ...(inline ? { document: false, paragraph: false, blockquote: false, bulletList: false, orderedList: false, listItem: false, listKeymap: false, codeBlock: false, horizontalRule: false, trailingNode: false, gapcursor: false } as const : {}),
         link: { openOnClick: false, autolink: true, HTMLAttributes: { rel: null, target: null } },
       }),
+      TextStyleKit.configure({ lineHeight: { types: inline ? ['textStyle'] : ['paragraph', 'heading'] } }),
+      CharacterCount.configure({ limit: maxLength }),
+      ...(inline ? [Node.create({ name: 'doc', topNode: true, content: 'inline*', addKeyboardShortcuts() { return { Enter: () => this.editor.commands.setHardBreak() } } })] : [
+      TextAlign.configure({ types: ['heading', 'paragraph'] }),
       Image.extend({
         // display uploads from the API while keeping the stored src site-relative
         renderHTML({ HTMLAttributes }) {
@@ -31,15 +43,37 @@ export function RichTextEditor({ value, onChange, placeholder }: { value: string
         },
       }),
       TableKit.configure({ table: { resizable: false } }),
+      ]),
       Placeholder.configure({ placeholder: placeholder ?? 'Escriba el contenido…' }),
     ],
-    content: value,
-    onUpdate: ({ editor: e }) => onChange(cleanHtml(e.getHTML())),
+    content: inline ? inlineContent(value) : value,
+    editorProps: { attributes: { role: 'textbox', 'aria-label': label, 'aria-multiline': 'true' } },
+    onUpdate: ({ editor: e }) => {
+      lastEmitted.current = e.isEmpty ? '' : inline ? `<span>${e.getHTML()}</span>` : cleanHtml(e.getHTML())
+      onChange(lastEmitted.current)
+    },
   })
 
+  useEffect(() => {
+    if (editor && value !== lastEmitted.current) {
+      editor.commands.setContent(inline ? inlineContent(value) : value, { emitUpdate: false })
+      lastEmitted.current = value
+    }
+  }, [editor, value, inline])
+
   return (
-    <div className="overflow-hidden rounded-[4px] border border-line bg-white focus-within:border-brand">
-      {editor && <Toolbar editor={editor} source={source} onToggleSource={() => setSource((s) => !s)} />}
+    <div className="rounded-[4px] border border-line bg-white focus-within:border-brand">
+      {editor && !inline && <Toolbar editor={editor} source={source} onToggleSource={() => setSource((s) => !s)} />}
+      {editor && !source && <>
+        <div className="flex items-center justify-between gap-2 border-b border-line px-2 py-1 text-xs text-muted">
+          <span>Seleccione un texto para cambiar su estilo.</span>
+          <button type="button" aria-expanded={format} onClick={() => setFormat((v) => !v)} className="rounded px-2 py-1.5 font-medium text-brand hover:bg-stone">Formato</button>
+        </div>
+        {format && <div className="border-b border-line p-2"><TextFormatControls editor={editor} inline={inline} /></div>}
+        <BubbleMenu editor={editor} options={{ placement: 'top', offset: 10, shift: { padding: 12 }, flip: true }} className="text-format-bubble" updateDelay={100}>
+          <TextFormatControls editor={editor} inline={inline} />
+        </BubbleMenu>
+      </>}
       {source ? (
         <textarea
           value={value}
@@ -52,10 +86,17 @@ export function RichTextEditor({ value, onChange, placeholder }: { value: string
           aria-label="Código HTML"
         />
       ) : (
-        <EditorContent editor={editor} className="editor-content" />
+        <EditorContent editor={editor} className={inline ? 'editor-content editor-inline' : 'editor-content'} />
       )}
     </div>
   )
+}
+
+// Existing site copy is plain text with *emphasis*. Only convert it on edit.
+function inlineContent(value: string) {
+  if (/<\/?[a-z][^>]*>/i.test(value)) return value
+  return value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/\*([^*]+)\*/g, '<em><span style="color: #9a754b">$1</span></em>').replace(/\n/g, '<br>')
 }
 
 // image src is rendered absolute for display; store it site-relative again
