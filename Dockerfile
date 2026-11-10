@@ -15,3 +15,4 @@ COPY nginx.conf /etc/nginx/conf.d/default.conf
 COPY security-headers.inc /etc/nginx/conf.d/security-headers.inc
 COPY --from=build /app/dist/client /usr/share/nginx/html
 EXPOSE 3000
+HEALTHCHECK --interval=15s --timeout=3s --start-period=10s --retries=3 CMD wget -qO- http://127.0.0.1:3000/ >/dev/null || exit 1

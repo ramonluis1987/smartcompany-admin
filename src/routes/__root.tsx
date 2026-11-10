@@ -1,6 +1,11 @@
 import { QueryClientProvider } from '@tanstack/react-query'
 import type { QueryClient } from '@tanstack/react-query'
-import { HeadContent, Outlet, Scripts, createRootRouteWithContext } from '@tanstack/react-router'
+import {
+  HeadContent,
+  Outlet,
+  Scripts,
+  createRootRouteWithContext,
+} from '@tanstack/react-router'
 import { UIProvider } from '#/components/ui'
 import { AuthProvider } from '#/lib/auth'
 import type { Auth } from '#/lib/auth'
@@ -20,9 +25,24 @@ export const Route = createRootRouteWithContext<RouterContext>()({
       { title: 'Administración · Smart Company' },
     ],
     links: [
+      { rel: 'icon', href: '/favicon.ico', sizes: '48x48' },
+      {
+        rel: 'icon',
+        href: '/favicon.png',
+        type: 'image/png',
+        sizes: '128x128',
+      },
+      { rel: 'apple-touch-icon', href: '/apple-icon.png' },
       { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
-      { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossOrigin: 'anonymous' },
-      { rel: 'stylesheet', href: 'https://fonts.googleapis.com/css2?family=Albert+Sans:wght@400;500;600&family=Newsreader:opsz,wght@6..72,300;6..72,400&display=swap' },
+      {
+        rel: 'preconnect',
+        href: 'https://fonts.gstatic.com',
+        crossOrigin: 'anonymous',
+      },
+      {
+        rel: 'stylesheet',
+        href: 'https://fonts.googleapis.com/css2?family=Albert+Sans:wght@400;500;600&family=Newsreader:opsz,wght@6..72,300;6..72,400&display=swap',
+      },
       { rel: 'stylesheet', href: appCss },
     ],
   }),

@@ -3,17 +3,38 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
 import { z } from 'zod'
 import { ImageInput } from '#/components/ImageInput'
-import { Button, Card, ErrorBox, Loading, PageHeader, TextArea, TextField, errorText, useUI } from '#/components/ui'
+import {
+  Button,
+  Card,
+  ErrorBox,
+  Loading,
+  PageHeader,
+  Switch,
+  TextArea,
+  TextField,
+  errorText,
+  useUI,
+} from '#/components/ui'
 import { WEB_URL, api } from '#/lib/api'
 import type { Settings } from '#/lib/types'
 
 type Key = keyof Settings
-type Spec = { name: string; label: string; kind?: 'text' | 'textarea' | 'image'; hint?: string; max?: number }
+type Spec = {
+  name: string
+  label: string
+  kind?: 'text' | 'textarea' | 'image' | 'switch'
+  hint?: string
+  max?: number
+}
 type Section = { title: string; fields: Spec[] }
 
-const EMPHASIS = 'Encierre entre *asteriscos* las palabras que se muestran en verde cursiva.'
+const EMPHASIS =
+  'Encierre entre *asteriscos* las palabras que se muestran en cursiva de color bronce.'
 
-const FORMS: Record<Key, { label: string; description: string; sections: Section[] }> = {
+const FORMS: Record<
+  Key,
+  { label: string; description: string; sections: Section[] }
+> = {
   site: {
     label: 'Datos generales',
     description: 'Nombre, contacto y textos que aparecen en todas las páginas.',
@@ -22,17 +43,35 @@ const FORMS: Record<Key, { label: string; description: string; sections: Section
         title: 'Identidad',
         fields: [
           { name: 'name', label: 'Nombre del estudio' },
-          { name: 'tagline', label: 'Subtítulo', hint: 'Debajo del nombre, p. ej. «Abogados & Auditores».' },
-          { name: 'metaDescription', label: 'Descripción para Google', kind: 'textarea', max: 320 },
+          {
+            name: 'tagline',
+            label: 'Subtítulo',
+            hint: 'Debajo del nombre, p. ej. «Abogados & Auditores».',
+          },
+          {
+            name: 'metaDescription',
+            label: 'Descripción para Google',
+            kind: 'textarea',
+            max: 320,
+          },
           { name: 'topbarCities', label: 'Ciudades (barra superior)' },
-          { name: 'footerText', label: 'Texto del pie de página', kind: 'textarea', max: 600 },
+          {
+            name: 'footerText',
+            label: 'Texto del pie de página',
+            kind: 'textarea',
+            max: 600,
+          },
         ],
       },
       {
         title: 'Contacto',
         fields: [
           { name: 'phone', label: 'Teléfono matriz' },
-          { name: 'whatsapp', label: 'WhatsApp', hint: 'Solo números con código de país, p. ej. 593969001346.' },
+          {
+            name: 'whatsapp',
+            label: 'WhatsApp',
+            hint: 'Solo números con código de país, p. ej. 593969001346.',
+          },
           { name: 'email', label: 'Correo' },
           { name: 'hours', label: 'Horario de atención' },
           { name: 'instagram', label: 'Instagram (URL)' },
@@ -48,11 +87,25 @@ const FORMS: Record<Key, { label: string; description: string; sections: Section
         title: 'Portada',
         fields: [
           { name: 'heroEyebrow', label: 'Antetítulo' },
-          { name: 'heroTitle', label: 'Título principal', kind: 'textarea', hint: EMPHASIS, max: 200 },
-          { name: 'heroText', label: 'Texto', kind: 'textarea', max: 600 },
+          {
+            name: 'heroTitle',
+            label: 'Título principal',
+            kind: 'textarea',
+            hint: `Breve: hasta unas doce palabras. ${EMPHASIS}`,
+            max: 200,
+          },
+          { name: 'heroText', label: 'Texto de apoyo', kind: 'textarea', max: 600 },
           { name: 'heroImage', label: 'Fotografía', kind: 'image' },
-          { name: 'heroCaptionLeft', label: 'Pie de foto (izquierda)' },
-          { name: 'heroCaptionRight', label: 'Pie de foto (derecha)' },
+          {
+            name: 'heroCaptionRight',
+            label: 'Recuadro sobre la foto: línea principal',
+            hint: 'P. ej. «Desde 2004».',
+          },
+          {
+            name: 'heroCaptionLeft',
+            label: 'Recuadro sobre la foto: línea secundaria',
+            hint: 'P. ej. las ciudades.',
+          },
         ],
       },
       {
@@ -64,12 +117,26 @@ const FORMS: Record<Key, { label: string; description: string; sections: Section
         ],
       },
       {
+        title: 'Abogados',
+        fields: [
+          { name: 'teamEyebrow', label: 'Antetítulo' },
+          { name: 'teamTitle', label: 'Título', kind: 'textarea', hint: EMPHASIS, max: 200 },
+          {
+            name: 'teamText',
+            label: 'Texto',
+            kind: 'textarea',
+            hint: 'La trayectoria de cada abogado se escribe en Equipo → Biografía.',
+            max: 600,
+          },
+        ],
+      },
+      {
         title: 'Franja de declaración',
         fields: [
           { name: 'statementEyebrow', label: 'Antetítulo' },
           { name: 'statementQuote', label: 'Declaración', kind: 'textarea', hint: EMPHASIS, max: 800 },
           { name: 'statementAuthor', label: 'Firma' },
-          { name: 'statementImage', label: 'Fotografía de fondo', kind: 'image' },
+          { name: 'statementImage', label: 'Fotografía', kind: 'image' },
         ],
       },
       {
@@ -79,14 +146,6 @@ const FORMS: Record<Key, { label: string; description: string; sections: Section
           { name: 'consultasTitle', label: 'Título', kind: 'textarea', hint: EMPHASIS, max: 200 },
           { name: 'consultasText', label: 'Texto', kind: 'textarea', max: 600 },
           { name: 'consultasImage', label: 'Fotografía', kind: 'image' },
-        ],
-      },
-      {
-        title: 'Equipo',
-        fields: [
-          { name: 'teamEyebrow', label: 'Antetítulo' },
-          { name: 'teamTitle', label: 'Título', kind: 'textarea', hint: EMPHASIS, max: 200 },
-          { name: 'teamText', label: 'Texto', kind: 'textarea', max: 600 },
         ],
       },
       {
@@ -122,9 +181,38 @@ const FORMS: Record<Key, { label: string; description: string; sections: Section
       {
         title: 'En cada guía',
         fields: [
-          { name: 'articleCtaTitle', label: 'Título del formulario de asesoría' },
-          { name: 'articleCtaText', label: 'Texto del formulario', kind: 'textarea', max: 600 },
-          { name: 'protectedText', label: 'Mensaje en documentos protegidos', kind: 'textarea', max: 600 },
+          {
+            name: 'articleCtaTitle',
+            label: 'Título del formulario de asesoría',
+          },
+          {
+            name: 'articleCtaText',
+            label: 'Texto del formulario',
+            kind: 'textarea',
+            max: 600,
+          },
+          {
+            name: 'protectedText',
+            label: 'Mensaje en documentos protegidos',
+            kind: 'textarea',
+            max: 600,
+          },
+        ],
+      },
+      {
+        title: 'Audio de las guías',
+        fields: [
+          {
+            name: 'audioEnabled',
+            label: 'Mostrar el botón para escuchar la guía',
+            kind: 'switch',
+            hint: 'Lee el artículo en voz alta con una voz en español latino del propio dispositivo del visitante, sin costo y siempre con el texto vigente.',
+          },
+          {
+            name: 'audioLabel',
+            label: 'Texto del botón',
+            hint: 'Por ejemplo: Escuchar esta guía',
+          },
         ],
       },
     ],
@@ -132,18 +220,26 @@ const FORMS: Record<Key, { label: string; description: string; sections: Section
 }
 
 export const Route = createFileRoute('/_app/contenido')({
-  validateSearch: z.object({ tab: z.enum(['site', 'home', 'consultas']).optional() }),
+  validateSearch: z.object({
+    tab: z.enum(['site', 'home', 'consultas']).optional(),
+  }),
   component: ContentPage,
 })
 
 function ContentPage() {
   const { tab = 'home' } = Route.useSearch()
   const navigate = useNavigate({ from: Route.fullPath })
-  const { data, isPending, error } = useQuery({ queryKey: ['settings'], queryFn: () => api<Settings>('/admin/settings') })
+  const { data, isPending, error } = useQuery({
+    queryKey: ['settings'],
+    queryFn: () => api<Settings>('/admin/settings'),
+  })
 
   return (
     <>
-      <PageHeader title="Textos del sitio" description="Todo el texto del sitio público. Los cambios se ven en el sitio apenas guarda." />
+      <PageHeader
+        title="Textos del sitio"
+        description="Todo el texto del sitio público. Los cambios se ven en el sitio apenas guarda."
+      />
       <div className="mb-6 flex gap-1 border-b border-line" role="tablist">
         {(Object.keys(FORMS) as Key[]).map((k) => (
           <button
@@ -158,12 +254,24 @@ function ContentPage() {
           </button>
         ))}
       </div>
-      {isPending ? <Loading /> : error ? <ErrorBox error={error} /> : <SettingsForm key={tab} settingsKey={tab} initial={data[tab]} />}
+      {isPending ? (
+        <Loading />
+      ) : error ? (
+        <ErrorBox error={error} />
+      ) : (
+        <SettingsForm key={tab} settingsKey={tab} initial={data[tab]} />
+      )}
     </>
   )
 }
 
-function SettingsForm({ settingsKey, initial }: { settingsKey: Key; initial: Record<string, unknown> }) {
+function SettingsForm({
+  settingsKey,
+  initial,
+}: {
+  settingsKey: Key
+  initial: Record<string, unknown>
+}) {
   const qc = useQueryClient()
   const { toast } = useUI()
   const [values, setValues] = useState<Record<string, unknown>>(initial)
@@ -181,7 +289,8 @@ function SettingsForm({ settingsKey, initial }: { settingsKey: Key; initial: Rec
   }, [dirty])
 
   const save = useMutation({
-    mutationFn: () => api(`/admin/settings/${settingsKey}`, { method: 'PUT', json: values }),
+    mutationFn: () =>
+      api(`/admin/settings/${settingsKey}`, { method: 'PUT', json: values }),
     onSuccess: async () => {
       setDirty(false)
       await qc.invalidateQueries({ queryKey: ['settings'] })
@@ -195,11 +304,24 @@ function SettingsForm({ settingsKey, initial }: { settingsKey: Key; initial: Rec
       <div className="sticky top-0 z-20 -mx-1 flex items-center justify-between gap-3 bg-paper/95 px-1 py-3 backdrop-blur">
         <p className="text-[13px] text-muted">{form.description}</p>
         <div className="flex gap-2">
-          <a href={WEB_URL} target="_blank" rel="noopener noreferrer" className="inline-flex h-10 items-center rounded-[3px] border border-line bg-white px-4 text-sm hover:border-ink">
+          <a
+            href={WEB_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex h-10 items-center rounded-[3px] border border-line bg-white px-4 text-sm hover:border-ink"
+          >
             Ver sitio ↗
           </a>
-          <Button variant="primary" disabled={!dirty || save.isPending} onClick={() => save.mutate()}>
-            {save.isPending ? 'Guardando…' : dirty ? 'Guardar cambios' : 'Guardado'}
+          <Button
+            variant="primary"
+            disabled={!dirty || save.isPending}
+            onClick={() => save.mutate()}
+          >
+            {save.isPending
+              ? 'Guardando…'
+              : dirty
+                ? 'Guardar cambios'
+                : 'Guardado'}
           </Button>
         </div>
       </div>
@@ -208,27 +330,88 @@ function SettingsForm({ settingsKey, initial }: { settingsKey: Key; initial: Rec
         <Card key={section.title} title={section.title}>
           <div className="grid gap-4 md:grid-cols-2">
             {section.fields.map((f) =>
-              f.kind === 'image' ? (
-                <ImageInput key={f.name} label={f.label} value={typeof values[f.name] === 'string' && values[f.name] ? String(values[f.name]) : null} onChange={(v) => set(f.name, v ?? '')} aspect="aspect-[16/10]" />
+              f.kind === 'switch' ? (
+                <div key={f.name} className="md:col-span-2">
+                  <Switch
+                    label={f.label}
+                    hint={f.hint}
+                    checked={values[f.name] !== false}
+                    onChange={(v) => set(f.name, v)}
+                  />
+                </div>
+              ) : f.kind === 'image' ? (
+                <ImageInput
+                  key={f.name}
+                  label={f.label}
+                  value={
+                    typeof values[f.name] === 'string' && values[f.name]
+                      ? String(values[f.name])
+                      : null
+                  }
+                  onChange={(v) => set(f.name, v ?? '')}
+                  aspect="aspect-[16/10]"
+                />
               ) : f.kind === 'textarea' ? (
-                <TextArea key={f.name} label={f.label} hint={f.hint} value={typeof values[f.name] === 'string' ? String(values[f.name]) : ''} onChange={(v) => set(f.name, v)} maxLength={f.max} className="md:col-span-2" />
+                <TextArea
+                  key={f.name}
+                  label={f.label}
+                  hint={f.hint}
+                  value={
+                    typeof values[f.name] === 'string'
+                      ? String(values[f.name])
+                      : ''
+                  }
+                  onChange={(v) => set(f.name, v)}
+                  maxLength={f.max}
+                  className="md:col-span-2"
+                />
               ) : (
-                <TextField key={f.name} label={f.label} hint={f.hint} value={typeof values[f.name] === 'string' ? String(values[f.name]) : ''} onChange={(v) => set(f.name, v)} />
+                <TextField
+                  key={f.name}
+                  label={f.label}
+                  hint={f.hint}
+                  value={
+                    typeof values[f.name] === 'string'
+                      ? String(values[f.name])
+                      : ''
+                  }
+                  onChange={(v) => set(f.name, v)}
+                />
               ),
             )}
           </div>
         </Card>
       ))}
 
-      {settingsKey === 'home' && <StatsEditor value={Array.isArray(values.stats) ? (values.stats as { value: string; label: string }[]) : []} onChange={(v) => set('stats', v)} />}
+      {settingsKey === 'home' && (
+        <StatsEditor
+          value={
+            Array.isArray(values.stats)
+              ? (values.stats as { value: string; label: string }[])
+              : []
+          }
+          onChange={(v) => set('stats', v)}
+        />
+      )}
       {settingsKey === 'consultas' && (
         <Card title="Búsquedas sugeridas">
           <TextArea
             label="Una por línea"
             hint="Se muestran al hacer clic en el buscador vacío (máximo 12)."
             rows={7}
-            value={(Array.isArray(values.suggestions) ? (values.suggestions as string[]) : []).join('\n')}
-            onChange={(v) => set('suggestions', v.split('\n').map((s) => s.trimStart()).slice(0, 12))}
+            value={(Array.isArray(values.suggestions)
+              ? (values.suggestions as string[])
+              : []
+            ).join('\n')}
+            onChange={(v) =>
+              set(
+                'suggestions',
+                v
+                  .split('\n')
+                  .map((s) => s.trimStart())
+                  .slice(0, 12),
+              )
+            }
           />
         </Card>
       )}
@@ -236,14 +419,26 @@ function SettingsForm({ settingsKey, initial }: { settingsKey: Key; initial: Rec
   )
 }
 
-function StatsEditor({ value, onChange }: { value: { value: string; label: string }[]; onChange: (v: { value: string; label: string }[]) => void }) {
-  const update = (i: number, patch: Partial<{ value: string; label: string }>) => onChange(value.map((s, j) => (j === i ? { ...s, ...patch } : s)))
+function StatsEditor({
+  value,
+  onChange,
+}: {
+  value: { value: string; label: string }[]
+  onChange: (v: { value: string; label: string }[]) => void
+}) {
+  const update = (
+    i: number,
+    patch: Partial<{ value: string; label: string }>,
+  ) => onChange(value.map((s, j) => (j === i ? { ...s, ...patch } : s)))
   return (
     <Card
       title="Cifras bajo la portada"
       actions={
         value.length < 6 && (
-          <Button size="sm" onClick={() => onChange([...value, { value: '', label: '' }])}>
+          <Button
+            size="sm"
+            onClick={() => onChange([...value, { value: '', label: '' }])}
+          >
             + Agregar cifra
           </Button>
         )
@@ -251,10 +446,25 @@ function StatsEditor({ value, onChange }: { value: { value: string; label: strin
     >
       <div className="space-y-3">
         {value.map((s, i) => (
-          <div key={i} className="grid items-end gap-3 sm:grid-cols-[120px_1fr_auto]">
-            <TextField label="Cifra" value={s.value} onChange={(v) => update(i, { value: v })} />
-            <TextField label="Descripción" value={s.label} onChange={(v) => update(i, { label: v })} />
-            <Button variant="ghost" onClick={() => onChange(value.filter((_, j) => j !== i))} aria-label="Quitar cifra">
+          <div
+            key={i}
+            className="grid items-end gap-3 sm:grid-cols-[120px_1fr_auto]"
+          >
+            <TextField
+              label="Cifra"
+              value={s.value}
+              onChange={(v) => update(i, { value: v })}
+            />
+            <TextField
+              label="Descripción"
+              value={s.label}
+              onChange={(v) => update(i, { label: v })}
+            />
+            <Button
+              variant="ghost"
+              onClick={() => onChange(value.filter((_, j) => j !== i))}
+              aria-label="Quitar cifra"
+            >
               Quitar
             </Button>
           </div>
