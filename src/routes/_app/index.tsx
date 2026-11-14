@@ -33,7 +33,37 @@ function Dashboard() {
         <Metric label="Búsquedas (30 días)" value={c.searches} to="/buscador" />
       </div>
 
-      <div className="mt-8 grid gap-6 lg:grid-cols-2">
+      <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <Card title="Clics a WhatsApp · últimos 30 días" className="lg:col-span-2">
+          {data.whatsapp ? (
+            <>
+              <p className="font-serif text-[38px] leading-none text-ink">{data.whatsapp.total.toLocaleString('es-EC')} <span className="font-sans text-sm text-muted">clics para contactar</span></p>
+              <p className="mt-3 text-[13px] leading-relaxed text-muted">Registra clics en los botones de contacto; no confirma mensajes enviados ni personas únicas. No incluye compartir artículos. La medición comienza con esta actualización.</p>
+              <div className="my-5 flex flex-wrap gap-x-6 gap-y-2 text-sm">
+                <span>Móvil: {data.whatsapp.devices.mobile}</span>
+                <span>Computadora: {data.whatsapp.devices.desktop}</span>
+                <span>Tablet: {data.whatsapp.devices.tablet}</span>
+              </div>
+              <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+                <div>
+                  <h3 className="mb-2 text-sm font-medium">Páginas que generan clics</h3>
+                  {data.whatsapp.topPages.length ? <ul className="divide-y divide-line">{data.whatsapp.topPages.map((page) => (
+                    <li key={page.path} className="flex items-center justify-between gap-4 py-2">
+                      <a href={`${WEB_URL}${page.path}`} target="_blank" rel="noopener noreferrer" className="truncate text-sm text-ink hover:text-brand">{page.path}</a>
+                      <span className="shrink-0 text-sm">{page.clicks}</span>
+                    </li>
+                  ))}</ul> : <p className="text-sm text-muted">Aún no se registran clics de contacto.</p>}
+                </div>
+                <div>
+                  <h3 className="mb-2 text-sm font-medium">Ubicación del botón</h3>
+                  <ul className="divide-y divide-line">{Object.entries(data.whatsapp.placements).map(([placement, clicks]) => (
+                    <li key={placement} className="flex justify-between gap-4 py-2 text-sm"><span>{({ article_header: 'Inicio del artículo', article_sidebar: 'Junto al formulario', floating: 'Botón flotante', footer: 'Pie de página', inline: 'Otros enlaces de contacto' } as Record<string, string>)[placement] ?? placement}</span><span>{clicks}</span></li>
+                  ))}</ul>
+                </div>
+              </div>
+            </>
+          ) : <p className="text-sm text-muted">La medición de WhatsApp estará disponible cuando termine la actualización del servidor.</p>}
+        </Card>
         <Card
           title="Búsquedas sin resultados"
           actions={

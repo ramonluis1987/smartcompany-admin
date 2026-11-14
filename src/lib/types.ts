@@ -111,6 +111,12 @@ export interface Synonym {
 }
 
 export interface Stats {
+  whatsapp?: {
+    total: number
+    devices: Record<string, number>
+    placements: Record<string, number>
+    topPages: { path: string; clicks: number }[]
+  }
   counts: {
     published: number
     drafts: number
