@@ -10,7 +10,7 @@ ENV VITE_API_URL=$VITE_API_URL VITE_WEB_URL=$VITE_WEB_URL
 RUN npx vite build
 
 # static single-page app
-FROM nginx:1.29-alpine
+FROM nginx:1.31-alpine
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 COPY security-headers.inc /etc/nginx/conf.d/security-headers.inc
 COPY --from=build /app/dist/client /usr/share/nginx/html
