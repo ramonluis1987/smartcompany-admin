@@ -105,6 +105,7 @@ const cleanHtml = (html: string) => (html === '<p></p>' ? '' : html.replace(/src
 function Toolbar({ editor, source, onToggleSource }: { editor: Editor; source: boolean; onToggleSource: () => void }) {
   const { toast } = useUI()
   const fileRef = useRef<HTMLInputElement>(null)
+  const pdfRef = useRef<HTMLInputElement>(null)
   const [uploading, setUploading] = useState(false)
   const s = useEditorState({
     editor,
@@ -147,6 +148,25 @@ function Toolbar({ editor, source, onToggleSource }: { editor: Editor; source: b
     } finally {
       setUploading(false)
       if (fileRef.current) fileRef.current.value = ''
+    }
+  }
+
+  // links the selected text to the PDF, or inserts the document's name as the link
+  async function onPdf(file: File | undefined) {
+    if (!file) return
+    setUploading(true)
+    try {
+      const href = await uploadImage(file)
+      const { empty } = editor.state.selection
+      if (empty) {
+        const text = file.name.replace(/\.pdf$/i, '')
+        chain().insertContent({ type: 'text', text, marks: [{ type: 'link', attrs: { href } }] }).insertContent(' ').run()
+      } else chain().setLink({ href }).run()
+    } catch (err) {
+      toast(errorText(err), 'error')
+    } finally {
+      setUploading(false)
+      if (pdfRef.current) pdfRef.current.value = ''
     }
   }
 
@@ -198,6 +218,10 @@ function Toolbar({ editor, source, onToggleSource }: { editor: Editor; source: b
         {uploading ? 'Subiendo…' : 'Imagen'}
       </Tool>
       <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/avif" className="hidden" onChange={(e) => onImage(e.target.files?.[0])} />
+      <Tool label="Adjuntar PDF (enlaza el texto seleccionado)" onClick={() => pdfRef.current?.click()} disabled={source || uploading}>
+        PDF
+      </Tool>
+      <input ref={pdfRef} type="file" accept="application/pdf,.pdf" className="hidden" onChange={(e) => onPdf(e.target.files?.[0])} />
       {s.table ? (
         <>
           <Tool label="Agregar fila" onClick={() => chain().addRowAfter().run()}>+ Fila</Tool>

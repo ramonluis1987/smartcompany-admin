@@ -117,6 +117,7 @@ export async function api<T = unknown>(path: string, init: RequestInit & { json?
   return (await res.json()) as T
 }
 
+/** Uploads an image or a PDF; returns its site-relative /uploads/... path. */
 export async function uploadImage(file: File): Promise<string> {
   const form = new FormData()
   form.append('file', file)
