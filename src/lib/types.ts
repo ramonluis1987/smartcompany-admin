@@ -135,4 +135,5 @@ export interface Settings {
   site: Record<string, string>
   home: Record<string, unknown> & { stats: { value: string; label: string }[] }
   consultas: Record<string, unknown> & { suggestions: string[] }
+  pages: Record<string, string>
 }

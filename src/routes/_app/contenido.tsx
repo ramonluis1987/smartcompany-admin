@@ -24,7 +24,7 @@ type Key = keyof Settings
 type Spec = {
   name: string
   label: string
-  kind?: 'text' | 'textarea' | 'image' | 'switch'
+  kind?: 'text' | 'textarea' | 'image' | 'switch' | 'page'
   hint?: string
   max?: number
 }
@@ -220,11 +220,38 @@ const FORMS: Record<
       },
     ],
   },
+  pages: {
+    label: 'Páginas',
+    description: 'Sobre el estudio, Política de privacidad y Aviso legal. Una página con el texto vacío no se publica.',
+    sections: [
+      {
+        title: 'Sobre el estudio',
+        fields: [
+          { name: 'aboutTitle', label: 'Título' },
+          { name: 'aboutHtml', label: 'Texto', kind: 'page', hint: 'Debajo se muestran las áreas de práctica y las oficinas.' },
+        ],
+      },
+      {
+        title: 'Política de privacidad',
+        fields: [
+          { name: 'privacyTitle', label: 'Título' },
+          { name: 'privacyHtml', label: 'Texto', kind: 'page', hint: 'El formulario de contacto enlaza esta página.' },
+        ],
+      },
+      {
+        title: 'Aviso legal',
+        fields: [
+          { name: 'legalTitle', label: 'Título' },
+          { name: 'legalHtml', label: 'Texto', kind: 'page' },
+        ],
+      },
+    ],
+  },
 }
 
 export const Route = createFileRoute('/_app/contenido')({
   validateSearch: z.object({
-    tab: z.enum(['site', 'home', 'consultas']).optional(),
+    tab: z.enum(['site', 'home', 'consultas', 'pages']).optional(),
   }),
   component: ContentPage,
 })
@@ -341,6 +368,12 @@ function SettingsForm({
                     checked={values[f.name] !== false}
                     onChange={(v) => set(f.name, v)}
                   />
+                </div>
+              ) : f.kind === 'page' ? (
+                <div key={f.name} className="md:col-span-2">
+                  <Field label={f.label} hint={f.hint}>
+                    {() => <RichTextEditor label={f.label} value={String(values[f.name] ?? '')} onChange={(v) => set(f.name, v)} />}
+                  </Field>
                 </div>
               ) : f.kind === 'image' ? (
                 <ImageInput
